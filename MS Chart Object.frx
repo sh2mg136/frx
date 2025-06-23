@@ -1,0 +1,157 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="06/12/2025 11:20:19" ReportInfo.Modified="06/23/2025 14:46:17" ReportInfo.CreatorVersion="2023.2.29.0">
+  <ScriptText>using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Data;
+using FastReport;
+using FastReport.Data;
+using FastReport.Dialog;
+using FastReport.Barcode;
+using FastReport.Table;
+using FastReport.Utils;
+using FastReport.MSChart;
+using FastReport.DataVisualization;
+using FastReport.DataVisualization.Charting;
+
+namespace FastReport
+{
+  public class ReportScript
+  {
+
+    private void Page1_StartPage(object sender, EventArgs e)	{}
+
+    LineObject CreateLine(float top, float left)
+    {
+      LineObject line = new LineObject();
+      line.Left = left;
+      line.Top = top;
+      line.Width = 0;
+      line.Height = 20;        
+      line.Border.Color = Color.Gray;
+      return line; 
+    }
+    
+    TextObject CreateText(int day, float top, float left)
+    {
+      return CreateText(day.ToString(), top, left, 20);
+    }
+    
+    TextObject CreateText(string val, float top, float left, float width)
+    {
+      TextObject text = new TextObject();
+      text.Left = left;
+      text.Top = top + 2;
+      text.Width = width;
+      text.Height = 16;
+      text.Text = val;
+      text.Font = new Font(&quot;Arial&quot;, 8);
+      return text;      
+    }
+    
+    Random Rnd = new Random();
+
+    private double GetValueForDate(DateTime date)
+    {
+      // return 6 + Rnd.Next(1, 9) * Math.Sin(date.Day * Math.PI / 12);
+      return Rnd.Next(2, 5) + date.Day / Rnd.Next(2, 4);
+    }
+    
+    private void Data1_BeforePrint(object sender, EventArgs e)
+    {
+			DrawChart();
+    }
+		
+    private void MSChart1_BeforePrint(object sender, EventArgs e) { }
+		
+		void DrawChart()
+		{
+
+			MSChart1.Border.Shadow = false;
+			MSChart1.Border.Style = LineStyle.Solid;
+			MSChart1.Border.ShadowWidth = 0;
+			MSChart1.Border.SimpleBorder = true;
+			MSChart1.Border.Lines = BorderLines.None;
+      
+			MSChart1.Chart.BorderWidth = 0;
+        
+			var w1 = MSChart1.Chart.Width;
+			var area = MSChart1.Chart.ChartAreas[0];
+			area.BackColor = Color.FromArgb(250, 250, 205);      
+      
+			// area.InnerPlotPosition.Auto = false;
+			// var w2 = area.InnerPlotPosition.Width;
+   
+			float absoluteLeft = MSChart1.AbsLeft;  // X-координата левого края
+			float absoluteTop = MSChart1.AbsTop;    // Y-координата верхнего края
+        
+			// Получаем размеры объекта
+			float width2 = MSChart1.Width;
+			float height2 = MSChart1.Height;
+
+			float width3 = MSChart1.Chart.Width;
+			float height3 = MSChart1.Chart.Height;
+			
+			// Координаты центра графика относительно страницы
+			float centerX = absoluteLeft + width2 / 2;
+			float centerY = absoluteTop + height2 / 2;      
+      
+			// float pixels = valueInCentimeters * FastReport.Utils.Units.Centimeters;
+			// float pixels = centerX * FastReport.Utils.Units.Centimeters;
+      
+			string s = string.Empty;
+			
+			area.AxisX.Minimum = 1;
+			area.AxisX.Maximum = 31;
+
+			// var chartArea = chartObj.Chart.ChartAreas[0];
+			float chartMinX = (float)area.AxisX.Minimum;
+			float chartMaxX = (float)area.AxisX.Maximum;			
+			
+			s = string.Format(&quot;{0}x{1}. W={2} ({8}), H={3}. {4}:{5}.  {6}:{7}&quot;, 
+				absoluteLeft,
+				absoluteTop,
+				width2,
+				height2,
+				width3,
+				height3,				
+				centerX,
+				centerY,
+				width2 / FastReport.Utils.Units.Centimeters);      
+		
+          
+			// string s = string.Format(&quot;{0}. {1}&quot;, w1, w2);
+			TextObject tobj = CreateText(s, 400, 20, 700);
+			Data1.Objects.Add(tobj);			
+			
+			/*
+			float tmp = MSChart1.Chart.ChartAreas[0].InnerPlotPosition.Size.Width;
+			float totalLeft = area.Position.X;
+			float innerLeft = area.InnerPlotPosition.X;
+			s = string.Format(&quot;{0} - {1} - {2}&quot;, totalLeft, innerLeft, tmp);
+			TextObject tobj2 = CreateText(s, 420, 20, 700);
+			Data1.Objects.Add(tobj2);			
+			*/
+			
+			TextObject to2 = CreateText(&quot;test&quot;, 30, 20, 700);
+			to2.Top = centerY;
+			to2.Left = centerX;
+			Data1.Objects.Add(to2);
+			
+		}
+		
+  }
+}
+</ScriptText>
+  <Dictionary/>
+  <ReportPage Name="Page1" LeftMargin="5" TopMargin="5" RightMargin="5" Watermark.Font="Arial, 60pt" StartPageEvent="Page1_StartPage">
+    <DataBand Name="Data1" Width="756" Height="680.4" BeforePrintEvent="Data1_BeforePrint">
+      <MSChartObject Name="MSChart1" Width="756" Height="378" Border.ShadowColor="Gray" BeforePrintEvent="MSChart1_BeforePrint" ChartData="PENoYXJ0IElzU29mdFNoYWRvd3M9IkZhbHNlIiBCb3JkZXJsaW5lQ29sb3I9IkRhcmtHcmF5IiBCb3JkZXJsaW5lV2lkdGg9IjIiIEJvcmRlcmxpbmVEYXNoU3R5bGU9IlNvbGlkIj4NCiAgPFNlcmllcz4NCiAgICA8U2VyaWVzIE5hbWU9IlNlcmllczEiIExlZ2VuZD0iRGVmYXVsdCIgWFZhbHVlVHlwZT0iU3RyaW5nIiBZVmFsdWVUeXBlPSJEb3VibGUiIENoYXJ0VHlwZT0iU3BsaW5lIiBDaGFydEFyZWE9IkRlZmF1bHQiIENvbG9yPSJCbHVlIiBJc1Zpc2libGVJbkxlZ2VuZD0iRmFsc2UiPg0KICAgICAgPFBvaW50cz4NCiAgICAgICAgPERhdGFQb2ludCBZVmFsdWVzPSIxIiBBeGlzTGFiZWw9IkEiIC8+DQogICAgICAgIDxEYXRhUG9pbnQgWVZhbHVlcz0iMyIgQXhpc0xhYmVsPSJCIiAvPg0KICAgICAgICA8RGF0YVBvaW50IFlWYWx1ZXM9IjIiIEF4aXNMYWJlbD0iQyIgLz4NCiAgICAgICAgPERhdGFQb2ludCBZVmFsdWVzPSI0IiBBeGlzTGFiZWw9IkQiIC8+DQogICAgICA8L1BvaW50cz4NCiAgICA8L1Nlcmllcz4NCiAgPC9TZXJpZXM+DQogIDxUaXRsZXM+DQogICAgPFRpdGxlIE5hbWU9IlRpdGxlMSIgVmlzaWJsZT0iRmFsc2UiPg0KICAgIDwvVGl0bGU+DQogIDwvVGl0bGVzPg0KICA8Q2hhcnRBcmVhcz4NCiAgICA8Q2hhcnRBcmVhIE5hbWU9IkRlZmF1bHQiIEJhY2tDb2xvcj0iMjU1LCAyNTUsIDE5MiIgU2hhZG93Q29sb3I9IldoaXRlIj4NCiAgICAgIDxBeGlzWT4NCiAgICAgICAgPE1ham9yR3JpZCBMaW5lQ29sb3I9IjY0LCA2NCwgNjQsIDY0IiAvPg0KICAgICAgPC9BeGlzWT4NCiAgICAgIDxBeGlzWD4NCiAgICAgICAgPE1ham9yR3JpZCBMaW5lQ29sb3I9IjY0LCA2NCwgNjQsIDY0IiAvPg0KICAgICAgPC9BeGlzWD4NCiAgICAgIDxBeGlzWDI+DQogICAgICAgIDxNYWpvckdyaWQgTGluZUNvbG9yPSI2NCwgNjQsIDY0LCA2NCIgLz4NCiAgICAgIDwvQXhpc1gyPg0KICAgICAgPEF4aXNZMj4NCiAgICAgICAgPE1ham9yR3JpZCBMaW5lQ29sb3I9IjY0LCA2NCwgNjQsIDY0IiAvPg0KICAgICAgPC9BeGlzWTI+DQogICAgPC9DaGFydEFyZWE+DQogIDwvQ2hhcnRBcmVhcz4NCiAgPEJvcmRlclNraW4gU2tpblN0eWxlPSJFbWJvc3MiIC8+DQo8L0NoYXJ0Pg==">
+        <MSChartSeries Name="Series2"/>
+      </MSChartObject>
+    </DataBand>
+  </ReportPage>
+</Report>

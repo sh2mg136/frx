@@ -1,0 +1,206 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="06/12/2025 11:20:19" ReportInfo.Modified="06/22/2025 22:03:11" ReportInfo.CreatorVersion="2023.2.29.0">
+  <ScriptText>using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Data;
+using FastReport;
+using FastReport.Data;
+using FastReport.Dialog;
+using FastReport.Barcode;
+using FastReport.Table;
+using FastReport.Utils;
+using FastReport.MSChart;
+using FastReport.DataVisualization;
+using FastReport.DataVisualization.Charting;
+
+namespace FastReport
+{
+  public class ReportScript
+  {
+
+    private void Page1_StartPage(object sender, EventArgs e)
+    {
+      float width = PageHeader1.Width;
+            
+      LineObject line = CreateLine(0);
+      PageHeader1.Objects.Add(line);
+      line = CreateLine(width);      
+      PageHeader1.Objects.Add(line);
+      
+      float step = width / 10;
+      float dx = step;
+      int i = 1;
+      
+      while (dx &lt; width)
+      {
+        line = CreateLine(dx);
+        PageHeader1.Objects.Add(line);
+        dx = ++i * step;
+      }
+    }
+    
+    LineObject CreateLine(float left)
+    {
+      LineObject line = new LineObject();
+      line.Left = left;
+      line.Top = 10;
+      line.Width = 0;
+      line.Height = 100;        
+      line.Border.Color = Color.Gray;
+      return line; 
+    }
+
+    LineObject CreateLine2(float top, float left)
+    {
+      LineObject line = new LineObject();
+      line.Left = left;
+      line.Top = top;
+      line.Width = 0;
+      line.Height = 50;        
+      line.Border.Color = Color.Gray;
+      return line; 
+    }
+    
+    TextObject CreateText(int day, float top, float left)
+    {
+      return CreateText(day.ToString(), top, left, 20);
+    }
+    
+    TextObject CreateText(string day, float top, float left, float width)
+    {
+      TextObject text = new TextObject();
+      text.Left = left;
+      text.Top = top + 2;
+      text.Width = width;
+      text.Height = 20; // lineHeight;
+      text.Text = day;
+      text.Font = new Font(&quot;Arial&quot;, 8);
+      return text;      
+    }
+    
+    Random Rnd = new Random();
+
+    private double GetValueForDate(DateTime date)
+    {
+      // return 6 + Rnd.Next(1, 9) * Math.Sin(date.Day * Math.PI / 12);
+      return Rnd.Next(2, 5) + date.Day / Rnd.Next(2, 4);
+    }
+    
+    private void Data1_BeforePrint(object sender, EventArgs e)
+    {
+      MSChartObject chartObj = new MSChartObject();
+      Data1.Objects.Add(chartObj);
+      
+      chartObj.Left = 0;
+      chartObj.Top = MSChart1.Top + MSChart1.Height + 10;
+      chartObj.Width = Data1.Width;
+      chartObj.Height = 400;
+
+      float width = Data1.Width;
+      Chart chart = chartObj.Chart;
+      chart.Width = (int)width;
+      
+      chart.Series.Clear();
+
+      Series series = new Series(&quot;Series1&quot;);
+      series.ChartType = SeriesChartType.Spline;
+      chart.Series.Add(series);
+
+      DateTime startDate = new DateTime(2025, 1, 1);
+      
+      for (int i = 0; i &lt;= 30; i++)
+      {
+        DateTime currentDate = startDate.AddDays(i);
+        double yValue = GetValueForDate(currentDate);
+        series.Points.AddXY(currentDate.ToOADate(), yValue);
+        // series.Points.AddXY(i, yValue);
+      }
+
+      ChartArea area = new ChartArea();
+      area.BackColor = Color.FromArgb(250, 250, 205);
+      chart.ChartAreas.Add(area);
+      
+      area.AxisY.LabelStyle.Font = new Font(&quot;Arial&quot;, 8, FontStyle.Regular);
+      
+      var axisX = area.AxisX;
+      axisX.LabelStyle.Font = new Font(&quot;Arial&quot;, 8, FontStyle.Regular);
+      axisX.LabelStyle.Format = &quot;dd&quot;; // Формат даты на оси X
+      axisX.MajorTickMark.Enabled = true;
+      axisX.MajorTickMark.TickMarkStyle = TickMarkStyle.OutsideArea;
+      axisX.IntervalType = DateTimeIntervalType.Days;
+      axisX.Interval = 1;
+      axisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+
+
+      chart.Invalidate();
+      chart.Update();
+      // chart.Invalidate();
+      // Page1.Refresh();
+      // report.Prepare();
+      // draw a horizontal scale
+      LineObject line = null;
+      float top = chartObj.Top + chartObj.Height + 10;
+      // float width = chartObj.Chart.ChartAreas[0].InnerPlotPosition.Width; //chartObj.Width; // 600; // ;
+      // float width = chart.ChartAreas[0].InnerPlotPosition.Width;
+      
+      float chartWidthPx = chart.Width; // ширина всего Chart в пикселях
+      float innerPlotWidthPercent = area.InnerPlotPosition.Width; // в процентах
+      float innerPlotWidthPx = chartWidthPx * innerPlotWidthPercent / 100f; // innerPlotWidthPx
+
+      // float axisYWidth = area.AxisY
+      area.AxisY.MinorGrid.Enabled = true;
+      area.AxisY.MinorGrid.Interval = 2.0;
+      area.AxisY.MinorGrid.LineWidth = 1;
+      
+      area.AxisY.MajorGrid.Enabled = true;
+      area.AxisY.MajorGrid.Interval = 6.0;
+      area.AxisY.MajorGrid.LineWidth = 1;
+      
+      string str = string.Empty;
+      //str = string.Format(&quot;{0}:{1}&quot;, area.Position.X, area.Position.Y);
+      str = string.Format(&quot;{0}:{1}. {2}x{3}. {4}. {5}. {6}&quot;, 
+        area.Position.Bottom, 
+        area.Position.Right, 
+        area.Position.Width, 
+        area.Position.Height,
+        area.InnerPlotPosition.Width,
+        chartWidthPx,
+        innerPlotWidthPx);
+      
+      Console.WriteLine(width);
+      float step = width / 31;
+      
+      var tt = CreateText(str, top + 60, chartObj.Left, 120);
+      Data1.Objects.Add(tt);
+      
+      for (int day = 1; day &lt;= 31; day++)
+      {
+        line = CreateLine2(top, day * step);
+        Data1.Objects.Add(line);
+        
+        TextObject txt = CreateText(day, top, chartObj.Left + day * step + 5);
+        Data1.Objects.Add(txt);
+      }
+      
+      line = CreateLine2(top, 32 * step);
+      Data1.Objects.Add(line);      
+    }
+  }
+}
+</ScriptText>
+  <Dictionary/>
+  <ReportPage Name="Page1" LeftMargin="5" RightMargin="5" Watermark.Font="Arial, 60pt" StartPageEvent="Page1_StartPage">
+    <ReportTitleBand Name="ReportTitle1" Width="756" Height="18.9"/>
+    <PageHeaderBand Name="PageHeader1" Top="24.23" Width="756" Height="113.4"/>
+    <DataBand Name="Data1" Top="142.97" Width="756" Height="481.95" BeforePrintEvent="Data1_BeforePrint">
+      <MSChartObject Name="MSChart1" Left="28.35" Top="18.9" Width="519.75" Height="189" ChartData="PENoYXJ0IEJvcmRlcmxpbmVDb2xvcj0iRGFya0dyYXkiIEJvcmRlcmxpbmVXaWR0aD0iMiIgQm9yZGVybGluZURhc2hTdHlsZT0iU29saWQiPg0KICA8U2VyaWVzPg0KICAgIDxTZXJpZXMgTmFtZT0iU2VyaWVzMSIgTGVnZW5kPSJEZWZhdWx0IiBYVmFsdWVUeXBlPSJTdHJpbmciIFlWYWx1ZVR5cGU9IkRvdWJsZSIgQ2hhcnRBcmVhPSJEZWZhdWx0Ij4NCiAgICAgIDxQb2ludHM+DQogICAgICAgIDxEYXRhUG9pbnQgWVZhbHVlcz0iMSIgQXhpc0xhYmVsPSJBIiAvPg0KICAgICAgICA8RGF0YVBvaW50IFlWYWx1ZXM9IjMiIEF4aXNMYWJlbD0iQiIgLz4NCiAgICAgICAgPERhdGFQb2ludCBZVmFsdWVzPSIyIiBBeGlzTGFiZWw9IkMiIC8+DQogICAgICAgIDxEYXRhUG9pbnQgWVZhbHVlcz0iNCIgQXhpc0xhYmVsPSJEIiAvPg0KICAgICAgPC9Qb2ludHM+DQogICAgPC9TZXJpZXM+DQogIDwvU2VyaWVzPg0KICA8TGVnZW5kcz4NCiAgICA8TGVnZW5kIE5hbWU9IkRlZmF1bHQiPg0KICAgIDwvTGVnZW5kPg0KICA8L0xlZ2VuZHM+DQogIDxUaXRsZXM+DQogICAgPFRpdGxlIE5hbWU9IlRpdGxlMSIgVmlzaWJsZT0iRmFsc2UiPg0KICAgIDwvVGl0bGU+DQogIDwvVGl0bGVzPg0KICA8Q2hhcnRBcmVhcz4NCiAgICA8Q2hhcnRBcmVhIE5hbWU9IkRlZmF1bHQiPg0KICAgICAgPEF4aXNZPg0KICAgICAgICA8TWFqb3JHcmlkIExpbmVDb2xvcj0iNjQsIDY0LCA2NCwgNjQiIC8+DQogICAgICA8L0F4aXNZPg0KICAgICAgPEF4aXNYPg0KICAgICAgICA8TWFqb3JHcmlkIExpbmVDb2xvcj0iNjQsIDY0LCA2NCwgNjQiIC8+DQogICAgICA8L0F4aXNYPg0KICAgICAgPEF4aXNYMj4NCiAgICAgICAgPE1ham9yR3JpZCBMaW5lQ29sb3I9IjY0LCA2NCwgNjQsIDY0IiAvPg0KICAgICAgPC9BeGlzWDI+DQogICAgICA8QXhpc1kyPg0KICAgICAgICA8TWFqb3JHcmlkIExpbmVDb2xvcj0iNjQsIDY0LCA2NCwgNjQiIC8+DQogICAgICA8L0F4aXNZMj4NCiAgICA8L0NoYXJ0QXJlYT4NCiAgPC9DaGFydEFyZWFzPg0KICA8Qm9yZGVyU2tpbiBTa2luU3R5bGU9IkVtYm9zcyIgLz4NCjwvQ2hhcnQ+">
+        <MSChartSeries Name="Series2"/>
+      </MSChartObject>
+    </DataBand>
+    <PageFooterBand Name="PageFooter1" Top="630.25" Width="756" Height="37.8"/>
+  </ReportPage>
+</Report>

@@ -1,0 +1,265 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="06/12/2025 11:20:19" ReportInfo.Modified="06/23/2025 18:26:27" ReportInfo.CreatorVersion="2023.2.29.0">
+  <ScriptText>using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Data;
+using FastReport;
+using FastReport.Data;
+using FastReport.Dialog;
+using FastReport.Barcode;
+using FastReport.Table;
+using FastReport.Utils;
+using FastReport.MSChart;
+using FastReport.DataVisualization;
+using FastReport.DataVisualization.Charting;
+
+namespace FastReport
+{
+  public class ReportScript
+  {
+
+    private void Page1_StartPage(object sender, EventArgs e)
+    {}
+
+    LineObject CreateLine(float top, float left)
+    {
+      LineObject line = new LineObject();
+      line.Left = left;
+      line.Top = top;
+      line.Width = 0;
+      line.Height = 20;        
+      line.Border.Color = Color.Gray;
+      return line; 
+    }
+    
+    TextObject CreateText(int day, float top, float left)
+    {
+      return CreateText(day.ToString(), top, left, 20);
+    }
+    
+    TextObject CreateText(string val, float top, float left, float width)
+    {
+      TextObject text = new TextObject();
+      text.Left = left;
+      text.Top = top + 2;
+      text.Width = width;
+      text.Height = 16;
+      text.Text = val;
+      text.Font = new Font(&quot;Arial&quot;, 8);
+      return text;      
+    }
+    
+    Random Rnd = new Random();
+		System.Drawing.Color gray = System.Drawing.Color.Gray;
+
+    private double GetValueForDate(DateTime date)
+    {
+      // return 6 + Rnd.Next(1, 9) * Math.Sin(date.Day * Math.PI / 12);
+      return Rnd.Next(2, 5) + date.Day / Rnd.Next(2, 4);
+    }
+    
+		DataTable GetDS()
+		{
+			DataTable dtTestData = new DataTable();
+			
+			dtTestData.Columns.Add(&quot;id&quot;, typeof(int));
+			dtTestData.Columns.Add(&quot;date&quot;, typeof(DateTime));
+			dtTestData.Columns.Add(&quot;valY&quot;, typeof(double));
+			
+			double prev = 0.0;
+			DateTime start = new DateTime(2025, 1, 1);
+			DataRow row;
+			for (int i = 0; i &lt;= 30; i++)
+			{
+				var dt = start.AddDays(i);
+				row = dtTestData.NewRow();
+				row[&quot;id&quot;] = i+1;
+				row[&quot;date&quot;] = dt;
+				row[&quot;valY&quot;] = prev + Rnd.Next(1,5) + i / ( 1.25 + Rnd.NextDouble());
+				prev = (double)row[&quot;valY&quot;];
+				dtTestData.Rows.Add(row);
+			}
+			dtTestData.AcceptChanges();			
+			return dtTestData;
+		}
+		
+    private void Data1_BeforePrint(object sender, EventArgs e)
+    {
+      MSChartObject chartObj = new MSChartObject();
+      Data1.Objects.Add(chartObj);
+      
+			float absWidth = Data1.Width - 5;
+			
+      chartObj.Left = 5;
+      chartObj.Top = 40;
+      chartObj.Width = absWidth;
+      chartObj.Height = 400;
+
+      float width = Data1.Width;
+      Chart chart = chartObj.Chart;
+			
+			chart.BorderColor = gray;
+
+      ChartArea area = new ChartArea();
+      chart.ChartAreas.Add(area);
+
+			area.Position.Auto = true;
+			area.Position.Width = 100;
+			area.Position.Height = 100;
+			
+			area.InnerPlotPosition.Auto = false;
+			area.InnerPlotPosition.X = 4;
+			area.InnerPlotPosition.Y = 4;
+			area.InnerPlotPosition.Width = 94;
+			area.InnerPlotPosition.Height = 94;
+			
+      area.BackColor = Color.FromArgb(250, 250, 205);
+			area.BorderColor = gray;
+			area.BorderWidth = 1;
+			
+			area.AxisY.LineColor = gray;
+			area.AxisY.MajorGrid.LineColor = gray;
+			area.AxisY.MinorGrid.LineColor = gray;
+				
+      area.AxisY.LabelStyle.Font = new Font(&quot;Arial&quot;, 8, FontStyle.Regular);
+      area.AxisX.Enabled = AxisEnabled.True;
+      area.AxisX.MajorGrid.Enabled = false;
+      area.AxisX.MajorGrid.LineColor = gray;
+			area.AxisX.LineColor = gray;
+      area.AxisX.MajorTickMark.TickMarkStyle = TickMarkStyle.None;
+      area.AxisX.LabelStyle.Enabled = false;
+			area.AxisX.IsLabelAutoFit = false;
+			area.AxisX.MinorGrid.LineColor = gray;
+			
+			int total_days = 31;
+			
+			area.AxisX.Interval = 1;
+			area.AxisX.Minimum = 0.5;
+			area.AxisX.Maximum = 0.5 + total_days;
+			area.AxisX.LabelStyle.IntervalOffset = 0.5;
+			
+			area.AxisX.MajorGrid.Enabled = true;
+			area.AxisX.MajorGrid.LineColor = gray;
+			area.AxisX.MinorGrid.Enabled = false;
+			
+			area.AxisX.IntervalType = DateTimeIntervalType.Auto;
+      
+      /*      
+      var axisX = area.AxisX;
+      axisX.LabelStyle.Font = new Font(&quot;Arial&quot;, 8, FontStyle.Regular);
+      axisX.LabelStyle.Format = &quot;dd&quot;; // Формат даты на оси X
+      axisX.MajorTickMark.Enabled = true;
+      axisX.MajorTickMark.TickMarkStyle = TickMarkStyle.InsideArea;
+      axisX.IntervalType = DateTimeIntervalType.Days;
+      axisX.Interval = 1;
+      axisX.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+      */
+      
+			area.AxisY.MajorTickMark.Enabled = false;
+			
+      /*
+      area.AxisY.MinorGrid.Enabled = true;
+      area.AxisY.MinorGrid.Interval = 2.0;
+      area.AxisY.MinorGrid.LineWidth = 1;
+      
+      area.AxisY.MajorGrid.Enabled = true;
+      area.AxisY.MajorGrid.Interval = 6.0;
+      area.AxisY.MajorGrid.LineWidth = 1;
+      */
+      
+      // chart.Series.Clear();      
+      Series series = new Series(&quot;Series1&quot;);
+      series.ChartType = SeriesChartType.Spline;
+      chart.Series.Add(series);
+      DateTime startDate = new DateTime(2025, 1, 1);
+      
+      for (int i = 1; i &lt;= 22 /*total_days*/; i++)
+      {
+        DateTime currentDate = startDate.AddDays(i);
+        double yValue = GetValueForDate(currentDate);
+        // series.Points.AddXY(currentDate.ToOADate(), yValue);
+        series.Points.AddXY(i, yValue);
+      }
+
+			
+			Series series2 = new Series(&quot;Series2&quot;);
+			series2.ChartType = SeriesChartType.Spline;
+			
+			chart.Series.Add(series2);
+
+			
+			
+      // if (!Report.IsPrepared) Report.Prepare(true);
+
+      // draw a horizontal scale
+      LineObject line = null;     
+     
+      float top = chartObj.Top + chartObj.Height + 10;
+      // float width = chartObj.Chart.ChartAreas[0].InnerPlotPosition.Width; //chartObj.Width; // 600; // ;
+      // float width = chart.ChartAreas[0].InnerPlotPosition.Width;
+      
+      float chartWidthPx = chart.Width; // ширина всего Chart в пикселях
+      float innerPlotWidthPercent = area.InnerPlotPosition.Width; // в процентах
+      float innerPlotWidthPx = chartWidthPx * innerPlotWidthPercent / 100f; // innerPlotWidthPx
+      
+      string str = string.Empty;
+      //str = string.Format(&quot;{0}:{1}&quot;, area.Position.X, area.Position.Y);
+      str = string.Format(&quot;{0}:{1}. {2}x{3}. {4}. {5}. {6}&quot;, 
+      area.Position.Bottom, 
+      area.Position.Right, 
+      area.Position.Width, 
+      area.Position.Height,
+      area.InnerPlotPosition.Width,
+      chartWidthPx,
+      innerPlotWidthPx);
+      
+      top = chartObj.Top + chartObj.Height - 1.5f;
+      // line = CreateLine2(top, chartWidthPx);
+      // Data1.Objects.Add(line);
+
+      float step = area.InnerPlotPosition.Width * width / total_days / 100f;
+			float chart_right = chartObj.Left + area.InnerPlotPosition.Width * width / 100f;
+			
+			float innerPlotLeftPx = chartObj.Left + (area.InnerPlotPosition.X / 100f) * chartObj.Width;
+			float innerPlotTopPx = chartObj.Top + (area.InnerPlotPosition.Y / 100f) * chartObj.Height;
+     
+			str = string.Format(&quot;{0}:{1}.  {2}. {3}&quot;, 
+				innerPlotLeftPx, 
+				innerPlotTopPx,
+				chartObj.Left,
+				chart_right);
+			
+      var tt = CreateText(str, top + 80, chartObj.Left, 220);
+      Data1.Objects.Add(tt);
+			
+			float marginLeft = innerPlotLeftPx; // area.InnerPlotPosition.X; // innerPlotLeftPx;
+      
+      for (int day = 0; day &lt; total_days; day++)
+      {
+        line = CreateLine(top, day * step + marginLeft);
+        Data1.Objects.Add(line);
+        
+				TextObject txt = CreateText(day + 1, top, chartObj.Left + day * step + marginLeft - (day &gt;= 9 ? 3 : 0));
+        Data1.Objects.Add(txt);
+      }
+      
+      line = CreateLine(top, 31 * step + marginLeft);
+      Data1.Objects.Add(line);      
+			
+			line = CreateLine(top - 20, absWidth - Page1.RightMargin / Units.Centimeters); // // chart_right);
+			Data1.Objects.Add(line);
+			
+    }
+  }
+}
+</ScriptText>
+  <Dictionary/>
+  <ReportPage Name="Page1" LeftMargin="5" RightMargin="5" Watermark.Font="Arial, 60pt" StartPageEvent="Page1_StartPage">
+    <DataBand Name="Data1" Width="756" Height="481.95" BeforePrintEvent="Data1_BeforePrint"/>
+    <PageFooterBand Name="PageFooter1" Top="487.28" Width="756" Height="37.8"/>
+  </ReportPage>
+</Report>
