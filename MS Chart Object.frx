@@ -22,6 +22,7 @@ namespace FastReport
   public class ReportScript
   {
 
+	// test commit
     private void Page1_StartPage(object sender, EventArgs e)	{}
 
     LineObject CreateLine(float top, float left)
